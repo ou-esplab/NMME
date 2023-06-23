@@ -17,13 +17,13 @@ xr.set_options(keep_attrs=True)
 
 def initModels():
         
-    #all_varnames=['tref','prec'] #,'sst']
-    #all_levstrs=['2m','sfc'] #,'sfc']
-    #all_units=['degC','mmday-1'] #,'degC']
+    all_varnames=['tref','prec','sst']
+    all_levstrs=['2m','sfc','sfc']
+    all_units=['degC','mmday-1','degC']
     
-    all_varnames=['sst']
-    all_levstrs=['sfc']
-    all_units=['degC']
+    #all_varnames=['sst']
+    #all_levstrs=['sfc']
+    #all_units=['degC']
 
 
     cfsv2_dict={'model':'NCEP-CFSv2','group':'','varnames': all_varnames, 'levstrs': all_levstrs,'climo_range':'mc9120','plot_loc':0}
@@ -33,7 +33,8 @@ def initModels():
     ccsm_dict={'model':'COLA-RSMAS-CCSM4','group':'','varnames': all_varnames, 'levstrs': all_levstrs,'climo_range':'mc9120','plot_loc':4}
     geos_dict={'model':'NASA-GEOSS2S','group':'','varnames': all_varnames, 'levstrs': all_levstrs,'climo_range':'mc8210','plot_loc':5}
  
-    models_list=[cfsv2_dict] #,geos_dict,cancm_dict,gem_dict,gfdl_dict,ccsm_dict]
+    #models_list=[cfsv2_dict,geos_dict,cancm_dict,gem_dict,gfdl_dict,ccsm_dict]
+    models_list=[cfsv2_dict,cancm_dict,gem_dict,gfdl_dict,ccsm_dict]
     
     return models_list,all_varnames, all_levstrs, all_units
 
@@ -64,9 +65,7 @@ def initPlotParams():
              'clevs':clevs_sst,'cmap':'NegPos','units':'${^oC}$',
              'regions':['Global'],'scale_factor':1}
 
-    
-    #var_params_dict=[tas_dict,pr_dict] #,sst_dict]
-    var_params_dict=[sst_dict]
+    var_params_dict=[tas_dict,pr_dict,sst_dict]
      
     # Dictionary defining parameters for plotting different regions
     
@@ -82,11 +81,12 @@ def initPlotParams():
     return var_params_dict, reg_params_dict
 
 def decode_cf(ds, time_var):
-    """Decodes time dimension to CFTime standards."""
+    """Decodes time dimension to CFTime standards.""" 
     if ds[time_var].attrs["calendar"] == "360":
-        ds[time_var].attrs["calendar"] = "360_day"
+          ds[time_var].attrs["calendar"] = "360_day"
     ds = xr.decode_cf(ds, decode_times=True)
     ds[time_var].attrs["calendar"] = "365_day"
+
     return ds
 
 def getDataViaIngrid(ds_meta,baseURL):
@@ -109,6 +109,7 @@ def getDataViaIngrid(ds_meta,baseURL):
     
     # Construct the Ingrid URL
     ingridURL=baseURL+'/'+ingrid_svalue+'/dods/'
+    
     print(ingridURL)
     
     # Open the subsetted version of the dataset using the Ingrid URL
@@ -123,7 +124,6 @@ def getClimDataViaIngrid(hcstURL,fcstURL):
         
     # Open the dataset using the Ingrid URL
     dshcst=xr.open_dataset(hcstURL+'/[M]average/dods',decode_times=False,chunks={'S':'500MB'})
-
     dshcst = decode_cf(dshcst, 'S')
     dshcst['S']=dshcst['S'].astype("datetime64[ns]")
     
@@ -135,12 +135,13 @@ def getClimDataViaIngrid(hcstURL,fcstURL):
         dsfcst = decode_cf(dsfcst, 'S')
         dsfcst['S']=dsfcst['S'].astype("datetime64[ns]")
         
+    # This is for CFSv2 only.  Need to add model and if statement
     tmp1=dshcst.sel(S=slice('1991-01-01','2011-02-28'))
     tmp2=dsfcst.sel(S=slice('2011-03-01','2020-12-31'))
     ds=xr.concat([tmp1,tmp2],'S')
     
-    if ('Z' in ds.dims):
-        ds=ds.squeeze(dim='Z',drop=True)
+    #if ('Z' in ds.dims):
+    #    ds=ds.squeeze(dim='Z',drop=True)
     
     return ds,dshcst,dsfcst
 
