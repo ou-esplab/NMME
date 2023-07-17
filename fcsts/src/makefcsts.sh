@@ -2,7 +2,7 @@
 set -xve
 
 # Load python module to get access to conda
-. /usr/share/Modules/init/bash
+#. /usr/share/Modules/init/bash
 #module load anaconda/3
 
 # Activate conda environment
@@ -19,9 +19,9 @@ fcstdate=$1
 echo ${fcstdate}
 
 # Set Output Path
-#outPath=/shared/nmme/forecast/weekly/
-outPath1=/share/scratch/kpegion/nmme/forecast/monthly/
-outPath2=/share/scratch/kpegion/nmme/forecast/seasonal/
+
+outPath1=/data/esplab/shared/model/initialized/nmme/forecast/monthly/
+outPath2=/data/esplab/shared/model/initialized/nmme/forecast/seasonal/
 
 # Make directories for this forecast if they don't exist
 if [ ! -d "${outPath1}/$fcstdate/images/" ]
@@ -44,7 +44,7 @@ touch ${outPath1}/$fcstdate/nmmefcst.lock
 touch ${outPath2}/$fcstdate/nmmefcst.lock
 
 # Run Program to Make Forecast plot and data files
-./MakeNMMEFcst.py --date ${fcstdate} 
+./MakeNMMEFcsts.py --date ${fcstdate} 
 
 # Remove lockfiles if this program runs to completion
 rm ${outPath1}/$fcstdate/nmmefcst.lock

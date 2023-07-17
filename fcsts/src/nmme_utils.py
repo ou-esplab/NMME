@@ -33,8 +33,7 @@ def initModels():
     ccsm_dict={'model':'COLA-RSMAS-CCSM4','group':'','varnames': all_varnames, 'levstrs': all_levstrs,'climo_range':'mc9120','plot_loc':4}
     geos_dict={'model':'NASA-GEOSS2S','group':'','varnames': all_varnames, 'levstrs': all_levstrs,'climo_range':'mc8210','plot_loc':5}
  
-    #models_list=[cfsv2_dict,geos_dict,cancm_dict,gem_dict,gfdl_dict,ccsm_dict]
-    models_list=[cfsv2_dict,cancm_dict,gem_dict,gfdl_dict,ccsm_dict]
+    models_list=[cfsv2_dict,geos_dict,cancm_dict,gem_dict,gfdl_dict,ccsm_dict]
     
     return models_list,all_varnames, all_levstrs, all_units
 
@@ -311,8 +310,8 @@ def nmmeWrite(ds_fcst,fcstdate):
                 ds_model_list.append(ds.reset_coords(drop=True))
         
         # Output file -- probably should pass basepath in as optional argument
-        ofname_mon='/mcs/scratch/kpegion/nmme/forecast/monthly/'+fcstdate+'/data/NMME_fcst_'+fcstdate+'.anom.monthly.'+v+'_'+p+'.emean.nc'
-        ofname_seas='/mcs/scratch/kpegion/nmme/forecast/seasonal/'+fcstdate+'/data/NMME_fcst_'+fcstdate+'.anom.seas.'+v+'_'+p+'.emean.nc'
+        ofname_mon='/data/esplab/shared/model/initialized/nmme/forecast/monthly/'+fcstdate+'/data/NMME_fcst_'+fcstdate+'.anom.monthly.'+v+'_'+p+'.emean.nc'
+        ofname_seas='/data/esplab/shared/model/initialized/nmme/forecast/seasonal/'+fcstdate+'/data/NMME_fcst_'+fcstdate+'.anom.seas.'+v+'_'+p+'.emean.nc'
         print(ofname_seas)
         
         

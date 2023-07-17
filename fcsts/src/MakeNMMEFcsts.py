@@ -53,7 +53,7 @@ model_labels=[item['model'] for item in models_list]
 
 url='http://iridl.ldeo.columbia.edu/SOURCES/.Models/.NMME'
 datatype='FORECAST'
-climPath='/mcs/scratch/kpegion/nmme/climatology/monthly/1991-2020/'
+climPath='/data/esplab/shared/model/initialized/nmme/climatology/monthly/1991-2020/'
 
 
 # ### Make a nmme_fcst `xarray.Dataset` containing all models + MME for months 1-12
@@ -94,7 +94,7 @@ for imodel,nmme_model in enumerate(models_list):
         inFname=baseURL+'/2000/pop/dods'  
         
         # Read data
-        ds=xr.open_dataset(inFname,decode_times=False,chunks={'S':'500MB'})
+        ds=xr.open_dataset(inFname,decode_times=False)
         
         # Decode Times & convert to datetime
         ds = decode_cf(ds, 'S')
@@ -104,9 +104,9 @@ for imodel,nmme_model in enumerate(models_list):
         nens=len(ds['M'])
 
         # Select the most recent start date in fcst
-        ds=ds.sel(S=ds['S'][-1])
-        print(ds['S'][-1]
-        #ds=ds.sel(S='2023-05-01')
+        #ds=ds.sel(S=ds['S'][-1])
+        #print(ds['S'][-1])
+        ds=ds.sel(S='2023-06-01')
             
         # Get Latest Forecast Data Using Ingrid on IRIDL
         ds=getDataViaIngrid(ds,baseURL)
@@ -158,7 +158,7 @@ ds_fcst=xr.concat([ds_models,ds_mme],dim='model').compute()
 
 # Make Plots
 fcstdate=ds['S'][-1].dt.strftime('%Y%m').values
-figpath='/mcs/scratch/kpegion/nmme/forecast/monthly/'+fcstdate+'/images/'
+figpath='/data/esplab/shared/model/initialized/nmme/forecast/monthly/'+fcstdate+'/images/'
 nmmePlot(ds_fcst,figpath)
 
 # Write Data
