@@ -153,6 +153,11 @@ def nmmePlot(ds,path):
     for var_params in var_params_dict:
         print(var_params['name']) 
         
+        # Maskout land for ocean variables
+        if (var_params['name']=='sst'):
+            ds_land=xr.open_dataset('/data/esplab/shared/model/initialized/nmme/hindcast/land_cover.nc')
+            ds[var_params['name']]=xr.where(ds_land['land']==1,np.nan,ds[var_params['name']])
+            
         # Loop over regions to be plotting for this variable
         for regs in var_params['regions']:
         
