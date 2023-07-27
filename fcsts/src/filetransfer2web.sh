@@ -8,6 +8,11 @@ destDir=/home/kpegion/http/nmme/forecasts/
 destHost=somclass23.som.nor.ou.edu
 execDir=/home/kpegion/projects/NMME/fcsts/src
 
+# Activate conda environment
+. /home/$USER/miniconda3/etc/profile.d/conda.sh
+conda activate subxnmme
+
+
 # Check if lock file exists if so, wait 1 min and check again
 # Timeout after 1 hour
 
