@@ -11,6 +11,8 @@ import pandas as pd
 import os.path
 from datetime import datetime, timedelta, date
 import time
+import argparse
+import sys
 
 import matplotlib.pyplot as plt
 import proplot as pplt
@@ -36,6 +38,11 @@ warnings.filterwarnings("ignore")
 # Set xarray to keep attributes
 xr.set_options(keep_attrs=True)  
 
+# Parse commend line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("--date",nargs='?',default=None,help="make nmme forecasts based on this date")
+args = parser.parse_args()
+
 
 # ## Models and Forecast Settings
 
@@ -50,11 +57,17 @@ model_labels=[item['model'] for item in models_list]
 
 # In[5]:
 
-
 url='http://iridl.ldeo.columbia.edu/SOURCES/.Models/.NMME'
 datatype='FORECAST'
 climPath='/data/esplab/shared/model/initialized/nmme/climatology/monthly/1991-2020/'
 
+# ### Fcst Date Handling-- template from subx for allowing different dates to be run
+if (args.date):
+    fcstdate=datetime.strptime(args.date,'%Y%m')
+else:
+    sys.exit("Date argument is required: MakeNMMEFcsts.py --date YYYYMM")
+
+print("Using Fcstdate: ",fcstdate)
 
 # ### Make a nmme_fcst `xarray.Dataset` containing all models + MME for months 1-12
 
@@ -91,7 +104,8 @@ for imodel,nmme_model in enumerate(models_list):
                 baseURL=url+'/.'+model+'/.'+datatype+'/.MONTHLY'+'/.'+varname
         else:
             baseURL=url+'/.'+group+'/.'+model+'/.'+datatype+'/.MONTHLY'+'/.'+varname
-        inFname=baseURL+'/2000/pop/dods'  
+            
+        inFname=baseURL+'/'+str(date.toordinal(date.today()))+'/pop/dods' 
         
         # Read data
         ds=xr.open_dataset(inFname,decode_times=False)
@@ -103,11 +117,11 @@ for imodel,nmme_model in enumerate(models_list):
         # Store number of ensemble members
         nens=len(ds['M'])
 
-        # Select the most recent start date in fcst
-        #ds=ds.sel(S=ds['S'][-1])
-        #print(ds['S'][-1])
-        ds=ds.sel(S='2023-06-01')
-            
+        # Select the specifided start date in fcst
+        ds=ds.sel(S=fcstdate)
+    
+        # TO-DO if statement to check there start dates available just in case the recent start data does not exist
+        
         # Get Latest Forecast Data Using Ingrid on IRIDL
         ds=getDataViaIngrid(ds,baseURL)
                 
@@ -157,12 +171,12 @@ ds_mme=ds_mme.assign_coords({'model':'MME',
 ds_fcst=xr.concat([ds_models,ds_mme],dim='model').compute()
 
 # Make Plots
-fcstdate=ds['S'][-1].dt.strftime('%Y%m').values
-figpath='/data/esplab/shared/model/initialized/nmme/forecast/monthly/'+fcstdate+'/images/'
+fcstdate_str=fcstdate.strftime('%Y%m')
+figpath='/data/esplab/shared/model/initialized/nmme/forecast/monthly/'+fcstdate_str+'/images/'
 nmmePlot(ds_fcst,figpath)
 
 # Write Data
-nmmeWrite(ds_fcst,fcstdate)
+nmmeWrite(ds_fcst,fcstdate_str)
 
 
 # In[7]:

@@ -109,8 +109,6 @@ def getDataViaIngrid(ds_meta,baseURL):
     # Construct the Ingrid URL
     ingridURL=baseURL+'/'+ingrid_svalue+'/dods/'
     
-    print(ingridURL)
-    
     # Open the subsetted version of the dataset using the Ingrid URL
     ds=xr.open_dataset(ingridURL,decode_times=False)
     ds = decode_cf(ds, 'S') #.compute()
@@ -129,7 +127,6 @@ def getClimDataViaIngrid(hcstURL,fcstURL):
     if (hcstURL==fcstURL):
         dsfcst=dshcst
     else:
-        print(fcstURL+'/[M]average/dods')
         dsfcst=xr.open_dataset(fcstURL+'/[M]average/dods',decode_times=False)
         dsfcst = decode_cf(dsfcst, 'S')
         dsfcst['S']=dsfcst['S'].astype("datetime64[ns]")
@@ -177,8 +174,8 @@ def nmmePlot(ds,path):
             
 
 def makeWebImages(ds_fcst,v,unit,vl,clevs,cmap,sf,lonreg,latreg,clon,mproj,statescolor,figname):
-   
-    fcstdate=pd.to_datetime(ds_fcst['S'].values).strftime('%Y%m')
+    
+    fcstdate=pd.to_datetime(ds_fcst['S'][-1].values).strftime('%Y%m')
     
     # Proplot makes high res pics so need to reduce for web pics
     pplt.rc.savefigdpi = 100
@@ -196,8 +193,10 @@ def makeWebImages(ds_fcst,v,unit,vl,clevs,cmap,sf,lonreg,latreg,clon,mproj,state
         f, axs = pplt.subplots(grid,
                                proj=mproj,proj_kw={'lon_0': clon},
                                width=11,height=8.5)
-     
-        fcstmonth_str=(ds_fcst['S'][-1].values+pd.DateOffset(months=ilead)).strftime('%b')        
+        
+        tmp=ds_fcst['S'][-1].values+pd.DateOffset(months=ilead)
+        fcstmonth_str=tmp.strftime('%b')      
+
         suptitle='NMME Forecast '+fcstmonth_str+' '+vl+' Anomalies ('+unit+'): '+str(lead)+' Months Lead'
     
         # Loop over all models
@@ -216,7 +215,7 @@ def makeWebImages(ds_fcst,v,unit,vl,clevs,cmap,sf,lonreg,latreg,clon,mproj,state
             if ('lead' in ds.dims):
                 if (ds['lead'].values.max() >= ilead): # Logic to handle models that do not have 12 months of lead
                     ds=ds.sel(lead=ilead)
-                
+
                     if (model != 'MME'):
                         sub_nens=sub_nens+ds['nens'].values
                 
@@ -225,11 +224,11 @@ def makeWebImages(ds_fcst,v,unit,vl,clevs,cmap,sf,lonreg,latreg,clon,mproj,state
     
                     # Define titles for individual subplot panels
                     nens_str=str(ds['nens'].values.astype(int))
-                
+                    
                     if (model=='MME'):
-                        title=model+' (IC: '+(pd.to_datetime(ds_fcst['S'][-1].values)).strftime('%Y%m')+'; '+str(int(sub_nens))+' Ens )'
+                        title=model+' (IC: '+fcstdate+'; '+str(int(sub_nens))+' Ens )'
                     else:
-                        title=model+' (IC: '+(pd.to_datetime(ds_fcst['S'][-1].values)).strftime('%Y%m')+'; '+nens_str+' Ens )'
+                        title=model+' (IC: '+fcstdate+'; '+nens_str+' Ens )'
      
                     # Define normalization for colorbar centering
                     norm = pplt.Norm('diverging', vcenter=0)
@@ -325,11 +324,15 @@ def nmmeWrite(ds_fcst,fcstdate):
         
             # Put all the models together for this variable        
             ds_models=xr.merge(ds_model_list,compat='override')
+
+            print(ds_models)
+            print(ds_fcst)
             
             # Set Global attributes
             ds_models=setattrs(ds_models,fcstdate,u)
             
             # Set time dimension and units for grads readable
+            
             ds_models['lead']=ds_fcst['valid'].values
             ds_models=ds_models.rename({'lead':'time'})
             ds_models['time'].attrs['standard_name']='time'
